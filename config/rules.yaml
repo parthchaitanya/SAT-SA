@@ -1,0 +1,74 @@
+# Supervisory Analytics Tool for SOC Assessment (SAT-SA)
+# Configuration rules & thresholds for NCIIPC Supervisory Review
+
+positive_space_rules:
+  # POS_01: Minimum word count and character count for valid investigation notes
+  min_note_words: 6
+  min_note_chars: 25
+  trivial_note_keywords:
+    - "ok"
+    - "done"
+    - "fp"
+    - "false positive"
+    - "closed"
+    - "no issue"
+    - "resolved"
+    - "cleared"
+    - "na"
+    - "n/a"
+    - "checked"
+
+  # POS_02: High/Critical severity unescalated
+  critical_severities:
+    - "high"
+    - "critical"
+  valid_escalation_status: "escalated"
+
+  # POS_03: Templated / Near-duplicate notes similarity threshold (TF-IDF Cosine / Token overlap)
+  note_similarity_threshold: 0.82
+  min_cases_for_similarity: 3
+
+  # POS_04: Minimum realistic triage / close time (in minutes) by severity
+  min_close_time_minutes:
+    critical: 15
+    high: 10
+    medium: 5
+    low: 2
+
+negative_space_rules:
+  # NEG_01: Telemetry Blindspots - Alert categories expected for entity sector
+  telemetry_min_expected_ratio: 0.20  # If entity has < 20% of peer average for a critical alert type
+  
+  # NEG_02: Analyst Volume Outliers
+  analyst_volume_zscore_lower_threshold: -1.40
+  analyst_volume_iqr_multiplier: 1.5
+
+  # NEG_03: Entity Silence / Telemetry Blackout Windows
+  silence_window_days: 10
+  silence_volume_drop_ratio: 0.20  # Alert rate drops by >80% compared to entity 90-day moving average
+
+  # NEG_04: Missing Evidence Omission
+  analyst_missing_evidence_rate_threshold: 0.30  # >30% of cases missing complete evidence
+
+risk_scoring_weights:
+  analyst_weights:
+    positive_gap_ratio: 0.35
+    negative_gap_ratio: 0.25
+    unescalated_critical_ratio: 0.20
+    missing_evidence_ratio: 0.10
+    volume_outlier_penalty: 0.10
+  
+  entity_weights:
+    telemetry_blindspot_score: 0.40
+    silence_window_penalty: 0.30
+    overall_case_gap_rate: 0.20
+    evidence_deficiency_rate: 0.10
+
+ollama_config:
+  default_model: "llama3.2:latest"
+  alternative_models:
+    - "llama3.2:3b"
+    - "llama3.2:1b"
+    - "mistral:latest"
+  temperature: 0.2
+  timeout_seconds: 25
